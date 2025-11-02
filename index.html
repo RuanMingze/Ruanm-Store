@@ -1,0 +1,3093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruanm应用商店</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 有壁纸时的body样式 */
+        body.has-wallpaper {
+            background: transparent !important;
+            background-image: var(--wallpaper-url) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+
+        /* 自定义标题栏 */
+        .titlebar {
+            height: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            -webkit-app-region: drag; /* 使标题栏可拖拽 */
+        }
+
+        .titlebar-title {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .titlebar-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        .titlebar-controls {
+            display: flex;
+            -webkit-app-region: no-drag; /* 控制按钮不可拖拽 */
+        }
+
+        .titlebar-button {
+            width: 45px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-duration);
+        }
+
+        .titlebar-button:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .titlebar-close:hover {
+            background: #ff5f57;
+        }
+
+        .titlebar-minimize:hover {
+            background: #ffbd2e;
+        }
+
+        .titlebar-maximize:hover {
+            background: #28c940;
+        }
+
+        .titlebar-button svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        .content {
+            height: calc(100vh - 30px);
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            height: fit-content;
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .sidebar-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all var(--transition-duration) ease;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-item i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .sidebar-item.active i {
+            color: white;
+        }
+
+        /* 主内容区域样式 */
+        .main-content {
+            flex: 1;
+        }
+
+        /* 应用卡片样式 */
+        .app-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .app-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 无动画效果的卡片样式 */
+        .app-card.no-animation:hover {
+            transform: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 深色主题下的卡片样式 */
+        .dark-theme .app-card {
+            background: var(--card-background);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: var(--card-text);
+        }
+        
+        .dark-theme .app-card:hover {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .dark-theme .app-info h2 {
+            color: var(--card-text);
+        }
+        
+        .dark-theme .description {
+            color: #cccccc;
+        }
+        
+        .dark-theme .version {
+            color: #aaaaaa;
+        }
+        
+        /* 深色主题下的其他元素样式 */
+        .dark-theme body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .dark-theme .header {
+            background: var(--header-background);
+            color: var(--text-color);
+        }
+        
+        .dark-theme .header h1 {
+            color: var(--text-color);
+        }
+        
+        .dark-theme .sidebar {
+            background: var(--sidebar-background);
+            color: var(--sidebar-text);
+        }
+        
+        .dark-theme .sidebar-item {
+            color: var(--sidebar-text);
+        }
+        
+        .dark-theme .sidebar-item i {
+            color: var(--sidebar-text);
+        }
+        
+        .dark-theme .sidebar-item.active i {
+            color: rgb(255, 255, 255)
+        }
+        
+        .dark-theme .sidebar-item.active {
+            background: var(--sidebar-active);
+        }
+        
+        .dark-theme .sidebar-item:hover {
+            background: var(--sidebar-active);
+        }
+        
+        .dark-theme .coming-soon {
+            background: var(--card-background);
+            color: var(--card-text);
+        }
+        
+        .dark-theme .coming-soon h2,
+        .dark-theme .coming-soon p {
+            color: var(--card-text);
+        }
+        
+        .dark-theme .settings-group h3 {
+            color: var(--card-text);
+            border-bottom: 1px solid #444444;
+        }
+        
+        .dark-theme .setting-item {
+            background: #333333;
+        }
+        
+        .dark-theme .setting-item:hover {
+            background: #3a3a3a;
+        }
+        
+        .dark-theme .setting-label {
+            color: var(--card-text);
+        }
+        
+        .dark-theme .setting-description {
+            color: #cccccc;
+        }
+        
+        .dark-theme .detail-content {
+            background: var(--card-background);
+            color: var(--card-text);
+        }
+        
+        .dark-theme .detail-info h2 {
+            color: var(--card-text);
+        }
+        
+        .dark-theme .detail-info .version {
+            color: #aaaaaa;
+        }
+        
+        .dark-theme .detail-description {
+            color: #cccccc;
+        }
+        
+        .dark-theme .detail-close {
+            background: #f44336;
+            color: white;
+        }
+        
+        .dark-theme .hint-text {
+            color: #ff9966;
+        }
+        
+        .dark-theme .progress-text {
+            color: #cccccc;
+        }
+        
+        .dark-theme .progress-bar {
+            background-color: #444444;
+        }
+        
+        .dark-theme .incompatible-content {
+            background: var(--card-background);
+            color: var(--card-text);
+        }
+        
+        .dark-theme .incompatible-content h2 {
+            color: #f44336;
+        }
+        
+        .dark-theme .incompatible-content p {
+            color: var(--card-text);
+        }
+        
+        .dark-theme .confirm-body {
+            background: var(--card-background);
+        }
+        
+        .dark-theme .confirm-body p {
+            color: var(--card-text);
+        }
+
+        .app-icon img {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 3px solid #667eea;
+        }
+
+        .app-info {
+            margin-left: 30px;
+            flex: 1;
+        }
+
+        .app-info h2 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .version {
+            color: #777;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all var(--transition-duration) ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .extract-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .extract-btn:hover {
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .run-btn {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        .run-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.6);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .delete-btn:hover {
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* 提示信息样式 */
+        .hint-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #ff5722;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        /* 系统不兼容提示 */
+        .incompatible-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .incompatible-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .incompatible-content h2 {
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+
+        .incompatible-content p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .incompatible-content button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all var(--transition-duration) ease;
+        }
+
+        .incompatible-content button:hover {
+            background: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        /* 推荐软件区域 */
+        .coming-soon {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            margin-top: 30px;
+        }
+
+        .coming-soon h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .coming-soon p {
+            color: #777;
+            font-size: 1.2em;
+        }
+
+        /* 显示更多按钮 */
+        .show-more-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .show-more-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all var(--transition-duration) ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .show-more-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        /* 紧凑模式卡片 */
+        .app-card.compact {
+            padding: 15px;
+        }
+
+        .app-card.compact .app-icon img {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+        }
+
+        .app-card.compact .app-info {
+            margin-left: 15px;
+        }
+
+        .app-card.compact .app-info h2 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .app-card.compact .description {
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        .app-card.compact .version {
+            font-size: 0.7em;
+            margin-bottom: 10px;
+        }
+
+        .app-card.compact .button-group {
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .app-card.compact .action-btn {
+            padding: 8px 15px;
+            font-size: 0.8em;
+        }
+
+        /* 详情视图 */
+        .detail-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .detail-view.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .detail-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .detail-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .detail-icon img {
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 3px solid #667eea;
+        }
+
+        .detail-info {
+            margin-left: 20px;
+        }
+
+        .detail-info h2 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .detail-info .version {
+            color: #777;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .detail-description {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .app-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .app-icon {
+                margin-bottom: 20px;
+            }
+            
+            .app-info {
+                margin-left: 0;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .app-card.compact .app-icon {
+                margin-bottom: 10px;
+            }
+            
+            .app-card.compact {
+                text-align: center;
+            }
+        }
+        
+        /* CSS变量 */
+        :root {
+            --animation-duration: 0.3s;
+            --transition-duration: 0.3s;
+            --scrollbar-width: 8px;
+            --scrollbar-track: #f1f1f1;
+            --scrollbar-thumb: #c1c1c1;
+            --scrollbar-thumb-hover: #a8a8a8;
+            --background-color: #ffffff;
+            --text-color: #333333;
+        }
+        
+        /* 深色主题变量 */
+        .dark-theme {
+            --background-color: #1e1e1e;
+            --text-color: #ffffff;
+            --scrollbar-track: #2d2d2d;
+            --scrollbar-thumb: #555555;
+            --scrollbar-thumb-hover: #777777;
+            --card-background: #2d2d2d;
+            --card-text: #ffffff;
+            --card-border: #444444;
+            --header-background: #252525;
+            --sidebar-background: #252525;
+            --sidebar-text: #ffffff;
+            --sidebar-active: #3a3a3a;
+            --button-text: #ffffff;
+            --input-background: #333333;
+            --input-text: #ffffff;
+            --input-border: #555555;
+        }
+        
+        /* 自定义确认框样式 */
+        .custom-confirm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        
+        .confirm-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            overflow: hidden;
+        }
+        
+        .confirm-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .confirm-icon {
+            width: 30px;
+            height: 30px;
+            background: #f44336;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .confirm-header h3 {
+            margin: 0;
+            color: white;
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        
+        .confirm-body {
+            padding: 30px;
+            background: white;
+        }
+        
+        .confirm-body p {
+            color: #555;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 0 0 25px 0;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .confirm-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-duration) ease;
+            min-width: 100px;
+        }
+        
+        .yes-btn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+        }
+        
+        .yes-btn:hover {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(244, 67, 54, 0.4);
+        }
+        
+        .no-btn {
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .no-btn:hover {
+            background: linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 自定义滚动条样式 */
+        ::-webkit-scrollbar {
+            width: var(--scrollbar-width);
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        
+        /* 主内容区域滚动条 */
+        .main-content::-webkit-scrollbar {
+            width: var(--scrollbar-width);
+        }
+        
+        .main-content::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 4px;
+        }
+        
+        .main-content::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        
+        /* 设置页面样式 */
+        .settings-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .settings-group h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.2em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        
+        .setting-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            transition: background-color var(--transition-duration);
+        }
+        
+        .setting-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .setting-label {
+            flex: 1;
+            margin-left: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .setting-description {
+            margin: 5px 0 0 15px;
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .confirm-content {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .confirm-content h3 {
+                font-size: 1.3em;
+            }
+            
+            .confirm-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .confirm-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 系统不兼容提示（默认隐藏） -->
+    <div id="incompatibleWarning" class="incompatible-warning" style="display: none;">
+        <div class="incompatible-content">
+            <h2><i class="fas fa-exclamation-triangle"></i> 系统不兼容</h2>
+            <p>当前系统架构不兼容 Ruanm 应用商店。<br>本应用仅支持 64 位 Windows 系统。</p>
+            <button id="closeAppBtn">关闭应用</button>
+        </div>
+    </div>
+    
+    <!-- 自定义标题栏 -->
+    <div class="titlebar">
+        <div class="titlebar-title">
+            <svg class="titlebar-icon" viewBox="0 0 16 16">
+                <rect width="16" height="16" rx="3" fill="#667eea"/>
+                <circle cx="8" cy="7" r="3" fill="white"/>
+                <rect x="5" y="11" width="6" height="2" rx="1" fill="white"/>
+                <text x="8" y="5" text-anchor="middle" fill="#667eea" font-family="Arial" font-weight="bold" font-size="4">R</text>
+            </svg>
+            <span>Ruanm应用商店</span>
+        </div>
+        <div class="titlebar-controls">
+            <button class="titlebar-button titlebar-minimize" id="minimizeBtn">
+                <svg viewBox="0 0 10 10">
+                    <path d="M0,5 L10,5" stroke="black" stroke-width="1" fill="none"/>
+                </svg>
+            </button>
+            <button class="titlebar-button titlebar-maximize" id="maximizeBtn">
+                <svg viewBox="0 0 10 10">
+                    <rect x="1" y="1" width="8" height="8" stroke="black" stroke-width="1" fill="none"/>
+                </svg>
+            </button>
+            <button class="titlebar-button titlebar-close" id="closeBtn">
+                <svg viewBox="0 0 10 10">
+                    <path d="M2,2 L8,8 M8,2 L2,8" stroke="black" stroke-width="1" fill="none"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content">
+        <div class="header">
+            <h1>Ruanm应用商店</h1>
+        </div>
+        
+        <div class="container">
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <h2>分类</h2>
+                <div class="sidebar-item active" data-tab="recommended">
+                    <i class="fas fa-fire"></i>
+                    <span>推荐软件</span>
+                </div>
+                <div class="sidebar-item" data-tab="our-products">
+                    <i class="fas fa-box"></i>
+                    <span>我们的产品</span>
+                </div>
+                <div class="sidebar-item" data-tab="programming-tools">
+                    <i class="fas fa-code"></i>
+                    <span>编程工具</span>
+                </div>
+                <!-- 添加设置选项 -->
+                <div class="sidebar-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>设置</span>
+                </div>
+            </div>
+            
+            <!-- 主内容区域 -->
+            <div class="main-content">
+                <!-- 推荐软件 -->
+                <div id="recommended-tab">
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <img src="Everything.ico" alt="Everything" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzQyODVmNCIvPjx0ZXh0IHg9IjYwIiB5PSI2NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjMwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+RTwvdGV4dD48L3N2Zz4='">
+                        </div>
+                        <div class="app-info">
+                            <h2>Everything</h2>
+                            <p class="description">速度最快的文件搜索神器，能够瞬间定位电脑中的任何文件</p>
+                            <p class="version">版本: 1.4.1.1029</p>
+                            <div class="button-group">
+                                <button id="downloadEverythingBtn" class="action-btn">下载</button>
+                                <button id="selectEverythingDirBtn" class="action-btn extract-btn">选择解压后目录</button>
+                                <button id="extractEverythingBtn" class="action-btn extract-btn" style="display: none;">选择解压目录</button>
+                                <button id="runEverythingBtn" class="action-btn run-btn" style="display: none;">运行Everything</button>
+                                <button id="reselectEverythingDirBtn" class="action-btn extract-btn" style="display: none;">重新选择目录</button>
+                                <button id="deleteEverythingBtn" class="action-btn delete-btn" style="display: none;">删除Everything</button>
+                            </div>
+                            <div id="progressContainerEverything" class="progress-container" style="display: none;">
+                                <div class="progress-bar">
+                                    <div id="progressBarEverything" class="progress-fill"></div>
+                                </div>
+                                <span id="progressTextEverything">正在处理...</span>
+                            </div>
+                            <div id="hintTextEverything" class="hint-text" style="display: none;">
+                                请在浏览器中完成下载！下载完成后自行解压，接着把解压后的文件剪切到根目录，然后点击"选择解压目录"按钮选择解压后的目录就可以直接打开了。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <img src="7z.ico" alt="7-Zip" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzQyODVmNCIvPjx0ZXh0IHg9IjYwIiB5PSI2NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjMwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+N1o8L3RleHQ+PC9zdmc+'">
+                        </div>
+                        <div class="app-info">
+                            <h2>7-Zip</h2>
+                            <p class="description">强大的开源文件压缩和解压工具，支持多种压缩格式</p>
+                            <p class="version">版本: 25.01</p>
+                            <div class="button-group">
+                                <button id="download7zBtn" class="action-btn">下载</button>
+                                <button id="select7zDirBtn" class="action-btn extract-btn">选择安装目录</button>
+                                <button id="install7zBtn" class="action-btn extract-btn" style="display: none;">选择安装目录</button>
+                                <button id="run7zBtn" class="action-btn run-btn" style="display: none;">运行7-Zip</button>
+                                <button id="reselect7zDirBtn" class="action-btn extract-btn" style="display: none;">重新选择目录</button>
+                                <button id="delete7zBtn" class="action-btn delete-btn" style="display: none;">删除7-Zip</button>
+                            </div>
+                            <div id="progressContainer7z" class="progress-container" style="display: none;">
+                                <div class="progress-bar">
+                                    <div id="progressBar7z" class="progress-fill"></div>
+                                </div>
+                                <span id="progressText7z">正在处理...</span>
+                            </div>
+                            <div id="hintText7z" class="hint-text" style="display: none;">
+                                请在浏览器中完成下载！下载完成后运行exe文件进行安装，然后点击"选择安装目录"按钮选择安装后的目录就可以直接打开了。<br>
+                                <strong>提示：</strong>此操作是运行7-Zip的文件管理器，想要解压文件，请右键压缩的文件，选择"7-Zip"选项，里面就有解压按钮。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="coming-soon">
+                        <h2>敬请期待</h2>
+                        <p>更多优质软件即将上线，敬请关注！</p>
+                    </div>
+                </div>
+                
+                <!-- 我们的产品 -->
+                <div id="our-products-tab" style="display: none;">
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <img src="toolbox.jpg" alt="阮铭泽工具箱">
+                        </div>
+                        <div class="app-info">
+                            <h2>阮铭泽工具箱</h2>
+                            <p class="description">一款功能强大的实用工具集合</p>
+                            <p class="version">版本: v0.0.1-beta1.5</p>
+                            <div class="button-group">
+                                <button id="downloadBtn" class="action-btn">下载</button>
+                                <button id="selectDirBtn" class="action-btn extract-btn">选择解压后目录</button>
+                                <button id="extractBtn" class="action-btn extract-btn" style="display: none;">选择解压目录</button>
+                                <button id="runBtn" class="action-btn run-btn" style="display: none;">运行工具箱</button>
+                                <button id="reselectDirBtn" class="action-btn extract-btn" style="display: none;">重新选择目录</button>
+                                <button id="deleteBtn" class="action-btn delete-btn" style="display: none;">删除工具箱</button>
+                            </div>
+                            <div id="progressContainer" class="progress-container" style="display: none;">
+                                <div class="progress-bar">
+                                    <div id="progressBar" class="progress-fill"></div>
+                                </div>
+                                <span id="progressText">正在处理...</span>
+                            </div>
+                            <div id="hintText" class="hint-text" style="display: none;">
+                                请在浏览器中完成下载！下载完成后自行解压，接着把win-unpacked目录的文件剪切到根目录，然后点击"选择解压目录"按钮选择解压后的目录就可以直接打开了。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 编程工具 -->
+                <div id="programming-tools-tab" style="display: none;">
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <img src="node.js.ico" alt="Node.js">
+                        </div>
+                        <div class="app-info">
+                            <h2>Node.js</h2>
+                            <p class="description">基于Chrome V8引擎的JavaScript运行时环境，用于构建可扩展的网络应用</p>
+                            <p class="version">版本: 24.11.0</p>
+                            <div class="button-group">
+                                <button id="downloadNodeBtn" class="action-btn">下载</button>
+                                <button id="selectNodeDirBtn" class="action-btn extract-btn">选择解压后目录</button>
+                                <button id="extractNodeBtn" class="action-btn extract-btn" style="display: none;">选择解压目录</button>
+                                <button id="reselectNodeDirBtn" class="action-btn extract-btn" style="display: none;">重新选择目录</button>
+                                <button id="deleteNodeBtn" class="action-btn delete-btn" style="display: none;">删除Node.js</button>
+                            </div>
+                            <div id="progressContainerNode" class="progress-container" style="display: none;">
+                                <div class="progress-bar">
+                                    <div id="progressBarNode" class="progress-fill"></div>
+                                </div>
+                                <span id="progressTextNode">正在处理...</span>
+                            </div>
+                            <div id="hintTextNode" class="hint-text" style="display: block; margin-top: 15px;">
+                                <strong>提示：</strong>下载解压完成后，请将Node.js目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 添加Microsoft VS Code -->
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <img src="code.ico" alt="Microsoft VS Code">
+                        </div>
+                        <div class="app-info">
+                            <h2>Microsoft VS Code</h2>
+                            <p class="description">轻量级但功能强大的源代码编辑器，支持多种编程语言</p>
+                            <p class="version">版本: 1.105.1</p>
+                            <div class="button-group">
+                                <button id="downloadVSCodeBtn" class="action-btn">下载</button>
+                                <button id="selectVSCodeDirBtn" class="action-btn extract-btn">选择安装目录</button>
+                                <button id="installVSCodeBtn" class="action-btn extract-btn" style="display: none;">选择安装目录</button>
+                                <button id="runVSCodeBtn" class="action-btn run-btn" style="display: none;">运行VS Code</button>
+                                <button id="reselectVSCodeDirBtn" class="action-btn extract-btn" style="display: none;">重新选择目录</button>
+                                <button id="deleteVSCodeBtn" class="action-btn delete-btn" style="display: none;">删除VS Code</button>
+                            </div>
+                            <div id="progressContainerVSCode" class="progress-container" style="display: none;">
+                                <div class="progress-bar">
+                                    <div id="progressBarVSCode" class="progress-fill"></div>
+                                </div>
+                                <span id="progressTextVSCode">正在处理...</span>
+                            </div>
+                            <div id="hintTextVSCode" class="hint-text" style="display: none;">
+                                请在浏览器中完成下载！下载完成后运行exe文件进行安装，然后点击"选择安装目录"按钮选择安装后的目录就可以直接打开了。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="coming-soon">
+                        <h2>敬请期待</h2>
+                        <p>更多优质编程工具即将上线，敬请关注！</p>
+                    </div>
+                </div>
+                
+                <!-- 设置 -->
+                <div id="settings-tab" style="display: none;">
+                    <div class="app-card">
+                        <div class="app-icon">
+                            <i class="fas fa-cog" style="font-size: 48px; color: #667eea;"></i>
+                        </div>
+                        <div class="app-info">
+                            <h2>应用设置</h2>
+                            <p class="description">自定义应用的行为和外观</p>
+                            
+                            <div class="settings-group">
+                                <h3>动画设置</h3>
+                                <div class="setting-item">
+                                    <label class="switch">
+                                        <input type="checkbox" id="disableAnimationCheckbox">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="setting-label">关闭动画效果</span>
+                                    <p class="setting-description">完全关闭动画效果以提高性能，避免卡顿感</p>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3>主题设置</h3>
+                                <div class="setting-item">
+                                    <label class="switch">
+                                        <input type="checkbox" id="darkThemeCheckbox">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="setting-label">深色主题</span>
+                                    <p class="setting-description">切换到深色主题以减少眼部疲劳</p>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3>其他设置</h3>
+                                <div class="setting-item">
+                                    <label class="switch">
+                                        <input type="checkbox" id="autoCheckUpdateCheckbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="setting-label">自动检查更新</span>
+                                    <p class="setting-description">启动时自动检查应用更新</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        // 页面加载时检查系统兼容性
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const isCompatible = await ipcRenderer.invoke('check-system-compatibility');
+                if (!isCompatible) {
+                    // 显示不兼容提示
+                    document.getElementById('incompatibleWarning').style.display = 'flex';
+                    // 隐藏主内容
+                    document.querySelector('.content').style.display = 'none';
+                    return;
+                }
+                
+                // 如果系统兼容，继续初始化应用
+                initializeApp();
+            } catch (error) {
+                console.error('[UI] Error during initialization:', error);
+            }
+
+            // 监听Node.js容错机制激活事件
+            ipcRenderer.on('node-fallback-activated', (event, data) => {
+                // 显示提示信息
+                if (hintTextNode) {
+                    hintTextNode.style.display = 'block';
+                    hintTextNode.innerHTML = data.message + '<br>请手动运行解压目录中的node.exe文件';
+                }
+                    
+                // 更新按钮状态
+                if (runNodeBtn) {
+                    runNodeBtn.textContent = '运行Node.js';
+                    runNodeBtn.disabled = false;
+                }
+                    
+                if (progressContainerNode) {
+                    progressContainerNode.style.display = 'none';
+                }
+                    
+                if (progressBarNode) {
+                    progressBarNode.style.width = '0%';
+                }
+            });
+        });
+
+        // 初始化应用
+        function initializeApp() {
+            // 标题栏控制按钮
+            document.getElementById('minimizeBtn').addEventListener('click', () => {
+                ipcRenderer.invoke('minimize-window');
+            });
+
+            document.getElementById('maximizeBtn').addEventListener('click', () => {
+                ipcRenderer.invoke('maximize-window');
+            });
+
+            document.getElementById('closeBtn').addEventListener('click', () => {
+                ipcRenderer.invoke('close-window');
+            });
+
+            // 侧边栏标签切换
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // 移除所有活动状态
+                    sidebarItems.forEach(i => i.classList.remove('active'));
+                    // 添加当前活动状态
+                    item.classList.add('active');
+                    
+                    // 隐藏所有标签内容
+                    document.getElementById('our-products-tab').style.display = 'none';
+                    document.getElementById('recommended-tab').style.display = 'none';
+                    document.getElementById('programming-tools-tab').style.display = 'none';
+                    document.getElementById('settings-tab').style.display = 'none';
+                    
+                    // 显示选中的标签内容
+                    const tabId = item.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).style.display = 'block';
+                });
+            });
+
+            // 设置相关元素
+            const disableAnimationCheckbox = document.getElementById('disableAnimationCheckbox');
+            const darkThemeCheckbox = document.getElementById('darkThemeCheckbox');
+            const autoCheckUpdateCheckbox = document.getElementById('autoCheckUpdateCheckbox');
+
+            // 阮铭泽工具箱相关元素
+            const downloadBtn = document.getElementById('downloadBtn');
+            const selectDirBtn = document.getElementById('selectDirBtn');
+            const extractBtn = document.getElementById('extractBtn');
+            const runBtn = document.getElementById('runBtn');
+            const reselectDirBtn = document.getElementById('reselectDirBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const hintText = document.getElementById('hintText');
+
+            // Everything相关元素
+            const downloadEverythingBtn = document.getElementById('downloadEverythingBtn');
+            const selectEverythingDirBtn = document.getElementById('selectEverythingDirBtn');
+            const extractEverythingBtn = document.getElementById('extractEverythingBtn');
+            const runEverythingBtn = document.getElementById('runEverythingBtn');
+            const reselectEverythingDirBtn = document.getElementById('reselectEverythingDirBtn');
+            const deleteEverythingBtn = document.getElementById('deleteEverythingBtn');
+            const progressContainerEverything = document.getElementById('progressContainerEverything');
+            const progressBarEverything = document.getElementById('progressBarEverything');
+            const progressTextEverything = document.getElementById('progressTextEverything');
+            const hintTextEverything = document.getElementById('hintTextEverything');
+
+            // 7-Zip相关元素
+            const download7zBtn = document.getElementById('download7zBtn');
+            const select7zDirBtn = document.getElementById('select7zDirBtn');
+            const install7zBtn = document.getElementById('install7zBtn');
+            const run7zBtn = document.getElementById('run7zBtn');
+            const reselect7zDirBtn = document.getElementById('reselect7zDirBtn');
+            const delete7zBtn = document.getElementById('delete7zBtn');
+            const progressContainer7z = document.getElementById('progressContainer7z');
+            const progressBar7z = document.getElementById('progressBar7z');
+            const progressText7z = document.getElementById('progressText7z');
+            const hintText7z = document.getElementById('hintText7z');
+
+            // Node.js相关元素
+            const downloadNodeBtn = document.getElementById('downloadNodeBtn');
+            const selectNodeDirBtn = document.getElementById('selectNodeDirBtn');
+            const extractNodeBtn = document.getElementById('extractNodeBtn');
+            const reselectNodeDirBtn = document.getElementById('reselectNodeDirBtn');
+            const deleteNodeBtn = document.getElementById('deleteNodeBtn');
+            const progressContainerNode = document.getElementById('progressContainerNode');
+            const progressBarNode = document.getElementById('progressBarNode');
+            const progressTextNode = document.getElementById('progressTextNode');
+            const hintTextNode = document.getElementById('hintTextNode');
+            const nodePathHint = document.getElementById('nodePathHint'); // 新增的PATH提示元素
+
+            // VS Code相关元素
+            const downloadVSCodeBtn = document.getElementById('downloadVSCodeBtn');
+            const selectVSCodeDirBtn = document.getElementById('selectVSCodeDirBtn');
+            const installVSCodeBtn = document.getElementById('installVSCodeBtn');
+            const runVSCodeBtn = document.getElementById('runVSCodeBtn');
+            const reselectVSCodeDirBtn = document.getElementById('reselectVSCodeDirBtn');
+            const deleteVSCodeBtn = document.getElementById('deleteVSCodeBtn');
+            const progressContainerVSCode = document.getElementById('progressContainerVSCode');
+            const progressBarVSCode = document.getElementById('progressBarVSCode');
+            const progressTextVSCode = document.getElementById('progressTextVSCode');
+            const hintTextVSCode = document.getElementById('hintTextVSCode');
+
+            // 阮铭泽工具箱的下载链接
+            const toolboxDownloadUrl = 'https://github.com/RuanMingze/Ruanmze-toolbox-desktop/releases/download/v0.0.1-beta1.5/Ruanmingzetoolbox.zip';
+            
+            // Everything的下载链接
+            const everythingDownloadUrl = 'https://www.voidtools.com/Everything-1.4.1.1029.x64.zip';
+            
+            // 7-Zip的下载链接
+            const sevenZipDownloadUrl = 'https://www.7-zip.org/a/7z2501-x64.exe';
+            
+            // Node.js的下载链接
+            const nodeDownloadUrl = 'https://nodejs.org/dist/v24.11.0/node-v24.11.0-win-x64.zip';
+            
+            // VS Code的下载链接
+            const vscodeDownloadUrl = 'https://code.visualstudio.com/docs/?dv=win64user';
+            
+            // 存储解压目录路径
+            // 存储解压目录路径
+            let extractDirPath = '';
+            let everythingExtractDirPath = '';
+            let sevenZipInstallDirPath = '';
+            let nodeExtractDirPath = '';
+            let vscodeInstallDirPath = ''; // 添加VS Code安装目录路径变量
+
+            // 页面加载时检查本地数据
+            ipcRenderer.invoke('get-local-data').then((localData) => {
+                console.log('[UI] Received local data:', JSON.stringify(localData, null, 2));
+                if (localData.extractDir) {
+                    extractDirPath = localData.extractDir;
+                    // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                    downloadBtn.style.display = 'none';
+                    selectDirBtn.style.display = 'none';
+                    extractBtn.style.display = 'none';
+                    runBtn.style.display = 'inline-block';
+                    reselectDirBtn.style.display = 'inline-block';
+                    deleteBtn.style.display = 'inline-block';
+                    hintText.style.display = 'block';
+                    hintText.textContent = '已选择目录: ' + extractDirPath;
+                    console.log('[UI] Loaded extractDir:', extractDirPath);
+                }
+                
+                if (localData.everythingExtractDir) {
+                    everythingExtractDirPath = localData.everythingExtractDir;
+                    // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                    downloadEverythingBtn.style.display = 'none';
+                    selectEverythingDirBtn.style.display = 'none';
+                    extractEverythingBtn.style.display = 'none';
+                    runEverythingBtn.style.display = 'inline-block';
+                    reselectEverythingDirBtn.style.display = 'inline-block';
+                    deleteEverythingBtn.style.display = 'inline-block';
+                    hintTextEverything.style.display = 'block';
+                    hintTextEverything.textContent = '已选择目录: ' + everythingExtractDirPath;
+                    console.log('[UI] Loaded everythingExtractDir:', everythingExtractDirPath);
+                }
+                
+                if (localData.sevenZipInstallDir) {
+                    sevenZipInstallDirPath = localData.sevenZipInstallDir;
+                    // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                    download7zBtn.style.display = 'none';
+                    select7zDirBtn.style.display = 'none';
+                    install7zBtn.style.display = 'none';
+                    run7zBtn.style.display = 'inline-block';
+                    reselect7zDirBtn.style.display = 'inline-block';
+                    delete7zBtn.style.display = 'inline-block';
+                    hintText7z.style.display = 'block';
+                    hintText7z.textContent = '已选择目录: ' + sevenZipInstallDirPath;
+                    console.log('[UI] Loaded sevenZipInstallDir:', sevenZipInstallDirPath);
+                }
+                
+                // 检查VS Code数据
+                if (localData.vscodeInstallDir) {
+                    vscodeInstallDirPath = localData.vscodeInstallDir;
+                    // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                    downloadVSCodeBtn.style.display = 'none';
+                    selectVSCodeDirBtn.style.display = 'none';
+                    installVSCodeBtn.style.display = 'none';
+                    runVSCodeBtn.style.display = 'inline-block';
+                    reselectVSCodeDirBtn.style.display = 'inline-block';
+                    deleteVSCodeBtn.style.display = 'inline-block';
+                    hintTextVSCode.style.display = 'block';
+                    hintTextVSCode.textContent = '已选择目录: ' + vscodeInstallDirPath;
+                    console.log('[UI] Loaded vscodeInstallDir:', vscodeInstallDirPath);
+                }
+                
+                // 检查Node.js数据
+                if (localData.nodeExtractDir) {
+                    nodeExtractDirPath = localData.nodeExtractDir;
+                    // 显示重新选择和删除按钮，隐藏其他按钮
+                    downloadNodeBtn.style.display = 'none';
+                    selectNodeDirBtn.style.display = 'none';
+                    extractNodeBtn.style.display = 'none';
+                    reselectNodeDirBtn.style.display = 'inline-block';
+                    deleteNodeBtn.style.display = 'inline-block';
+                    // 始终显示PATH提示
+                    hintTextNode.style.display = 'block';
+                    hintTextNode.innerHTML = '已选择目录: ' + nodeExtractDirPath + '<br><strong>重要提示：</strong>请将此目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。';
+                    console.log('[UI] Loaded nodeExtractDir:', nodeExtractDirPath);
+                }
+                
+                // 检查设置数据
+                if (localData.settings) {
+                    // 设置关闭动画效果（默认关闭）
+                    if (localData.settings.disableAnimation !== undefined) {
+                        disableAnimationCheckbox.checked = localData.settings.disableAnimation;
+                        applyAnimationSettings(localData.settings.disableAnimation);
+                    } else {
+                        // 默认关闭动画效果
+                        disableAnimationCheckbox.checked = true;
+                        applyAnimationSettings(true);
+                    }
+                    
+                    // 设置深色主题
+                    if (localData.settings.darkTheme !== undefined) {
+                        darkThemeCheckbox.checked = localData.settings.darkTheme;
+                        applyThemeSettings(localData.settings.darkTheme);
+                    }
+                    
+                    // 设置自动检查更新
+                    if (localData.settings.autoCheckUpdate !== undefined) {
+                        autoCheckUpdateCheckbox.checked = localData.settings.autoCheckUpdate;
+                    }
+                    
+                    // 移除壁纸相关代码
+                    // if (localData.settings.wallpaper) {
+                    //     applyWallpaperSettings(localData.settings.wallpaper);
+                    //     showWallpaperPreview(localData.settings.wallpaper);
+                    // }
+                } else {
+                    // 默认关闭动画效果
+                    disableAnimationCheckbox.checked = true;
+                    applyAnimationSettings(true);
+                }
+            }).catch((error) => {
+                console.error('[UI] Failed to load local data:', error);
+            });
+
+            // 关闭动画效果设置
+            disableAnimationCheckbox.addEventListener('change', async () => {
+                const disableAnimation = disableAnimationCheckbox.checked;
+                
+                // 保存设置到本地数据
+                const localData = await ipcRenderer.invoke('get-local-data');
+                if (!localData.settings) {
+                    localData.settings = {};
+                }
+                localData.settings.disableAnimation = disableAnimation;
+                const saveResult = await ipcRenderer.invoke('save-local-data', localData);
+                
+                // 应用动画设置
+                applyAnimationSettings(disableAnimation);
+            });
+
+            // 深色主题设置
+            darkThemeCheckbox.addEventListener('change', async () => {
+                const darkTheme = darkThemeCheckbox.checked;
+                
+                // 保存设置到本地数据
+                const localData = await ipcRenderer.invoke('get-local-data');
+                if (!localData.settings) {
+                    localData.settings = {};
+                }
+                localData.settings.darkTheme = darkTheme;
+                const saveResult = await ipcRenderer.invoke('save-local-data', localData);
+                
+                // 应用主题设置
+                applyThemeSettings(darkTheme);
+            });
+
+            // 自动检查更新设置
+            autoCheckUpdateCheckbox.addEventListener('change', async () => {
+                const autoCheckUpdate = autoCheckUpdateCheckbox.checked;
+                
+                // 保存设置到本地数据
+                const localData = await ipcRenderer.invoke('get-local-data');
+                if (!localData.settings) {
+                    localData.settings = {};
+                }
+                localData.settings.autoCheckUpdate = autoCheckUpdate;
+                const saveResult = await ipcRenderer.invoke('save-local-data', localData);
+            });
+
+            // 应用动画设置函数
+            function applyAnimationSettings(disableAnimation) {
+                if (disableAnimation) {
+                    // 完全关闭动画效果
+                    document.documentElement.style.setProperty('--animation-duration', '0s');
+                    document.documentElement.style.setProperty('--transition-duration', '0s');
+                    
+                    // 添加无动画类到所有卡片
+                    const appCards = document.querySelectorAll('.app-card');
+                    appCards.forEach(card => {
+                        card.classList.add('no-animation');
+                    });
+                } else {
+                    // 恢复正常动画效果
+                    document.documentElement.style.setProperty('--animation-duration', '0.3s');
+                    document.documentElement.style.setProperty('--transition-duration', '0.3s');
+                    
+                    // 移除无动画类从所有卡片
+                    const appCards = document.querySelectorAll('.app-card');
+                    appCards.forEach(card => {
+                        card.classList.remove('no-animation');
+                    });
+                }
+            }
+
+            // 应用主题设置函数
+            function applyThemeSettings(darkTheme) {
+                if (darkTheme) {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+                
+                // 应用主题到所有元素
+                applyThemeToAllElements(darkTheme);
+            }
+
+            // 应用主题到所有元素的函数
+            function applyThemeToAllElements(darkTheme) {
+                if (darkTheme) {
+                    // 应用深色主题到特定元素
+                    document.documentElement.style.setProperty('--background-color', '#1e1e1e');
+                    document.documentElement.style.setProperty('--text-color', '#ffffff');
+                    document.documentElement.style.setProperty('--card-background', '#2d2d2d');
+                } else {
+                    // 恢复默认主题
+                    document.documentElement.style.setProperty('--background-color', '#ffffff');
+                    document.documentElement.style.setProperty('--text-color', '#333333');
+                    document.documentElement.style.setProperty('--card-background', 'rgba(255, 255, 255, 0.95)');
+                }
+            }
+
+            // 应用壁纸设置函数（废弃）
+            function applyWallpaperSettings(wallpaperPath) {
+                if (wallpaperPath) {
+                    // 设置CSS变量
+                    document.documentElement.style.setProperty('--wallpaper-url', `url("${wallpaperPath}")`);
+                    
+                    // 添加has-wallpaper类以覆盖默认背景
+                    document.body.classList.add('has-wallpaper');
+                    
+                    // 确保背景样式正确应用
+                    document.body.style.backgroundImage = `url("${wallpaperPath}")`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
+                    document.body.style.backgroundColor = 'transparent';
+                } else {
+                    // 清除壁纸
+                    clearWallpaper();
+                }
+            }
+
+            // 清除壁纸函数
+            function clearWallpaper() {
+                // 移除CSS变量
+                document.documentElement.style.removeProperty('--wallpaper-url');
+                
+                // 移除has-wallpaper类
+                document.body.classList.remove('has-wallpaper');
+                
+                // 清除内联样式
+                document.body.style.backgroundImage = '';
+                document.body.style.backgroundSize = '';
+                document.body.style.backgroundPosition = '';
+                document.body.style.backgroundRepeat = '';
+                document.body.style.backgroundAttachment = '';
+                document.body.style.backgroundColor = '';
+            }
+
+            // 显示壁纸预览函数
+            function showWallpaperPreview(wallpaperPath) {
+                if (wallpaperPath) {
+                    // 隐藏所有预览
+                    wallpaperImagePreview.style.display = 'none';
+                    
+                    // 图片预览
+                    wallpaperImagePreview.src = wallpaperPath;
+                    wallpaperImagePreview.style.display = 'block';
+                    
+                    // 显示预览容器
+                    wallpaperPreview.style.display = 'block';
+                }
+            }
+
+            // 阮铭泽工具箱下载按钮事件
+            downloadBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用下载按钮
+                    downloadBtn.disabled = true;
+                    downloadBtn.textContent = '处理中...';
+                    
+                    // 显示进度条
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '50%';
+                    progressText.textContent = '正在打开浏览器下载链接...';
+                    
+                    // 在浏览器中打开下载链接
+                    const result = await ipcRenderer.invoke('open-download-link', toolboxDownloadUrl);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            downloadBtn.style.display = 'none';
+                            extractBtn.style.display = 'inline-block';
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            // 显示提示信息
+                            hintText.style.display = 'block';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    downloadBtn.disabled = false;
+                    downloadBtn.textContent = '下载';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            });
+
+            // Everything下载按钮事件
+            downloadEverythingBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用下载按钮
+                    downloadEverythingBtn.disabled = true;
+                    downloadEverythingBtn.textContent = '处理中...';
+                    
+                    // 显示进度条
+                    progressContainerEverything.style.display = 'block';
+                    progressBarEverything.style.width = '50%';
+                    progressTextEverything.textContent = '正在打开浏览器下载链接...';
+                    
+                    // 在浏览器中打开下载链接
+                    const result = await ipcRenderer.invoke('open-download-link', everythingDownloadUrl);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            downloadEverythingBtn.style.display = 'none';
+                            extractEverythingBtn.style.display = 'inline-block';
+                            progressContainerEverything.style.display = 'none';
+                            progressBarEverything.style.width = '0%';
+                            // 显示提示信息
+                            hintTextEverything.style.display = 'block';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    downloadEverythingBtn.disabled = false;
+                    downloadEverythingBtn.textContent = '下载';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                }
+            });
+
+            // 7-Zip下载按钮事件
+            download7zBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用下载按钮
+                    download7zBtn.disabled = true;
+                    download7zBtn.textContent = '处理中...';
+                    
+                    // 显示进度条
+                    progressContainer7z.style.display = 'block';
+                    progressBar7z.style.width = '50%';
+                    progressText7z.textContent = '正在打开浏览器下载链接...';
+                    
+                    // 在浏览器中打开下载链接
+                    const result = await ipcRenderer.invoke('open-download-link', sevenZipDownloadUrl);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            download7zBtn.style.display = 'none';
+                            install7zBtn.style.display = 'inline-block';
+                            progressContainer7z.style.display = 'none';
+                            progressBar7z.style.width = '0%';
+                            // 显示提示信息
+                            hintText7z.style.display = 'block';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    download7zBtn.disabled = false;
+                    download7zBtn.textContent = '下载';
+                    progressContainer7z.style.display = 'none';
+                    progressBar7z.style.width = '0%';
+                }
+            });
+
+            // 7-Zip删除按钮事件
+            delete7zBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除7-Zip吗？这将删除整个目录: ' + sevenZipInstallDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        delete7zBtn.disabled = true;
+                        delete7zBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainer7z.style.display = 'block';
+                        progressBar7z.style.width = '50%';
+                        progressText7z.textContent = '正在删除7-Zip...';
+                        
+                        // 删除7-Zip
+                        const result = await ipcRenderer.invoke('delete-7z', sevenZipInstallDirPath);
+                        
+                        if (result.success) {
+                            // 更新按钮状态
+                            setTimeout(() => {
+                                run7zBtn.style.display = 'none';
+                                reselect7zDirBtn.style.display = 'none';
+                                delete7zBtn.style.display = 'none';
+                                download7zBtn.style.display = 'inline-block';
+                                select7zDirBtn.style.display = 'inline-block';
+                                progressContainer7z.style.display = 'none';
+                                progressBar7z.style.width = '0%';
+                                hintText7z.textContent = '7-Zip已删除。您可以重新下载或选择其他目录。';
+                                sevenZipInstallDirPath = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        alert('操作失败: ' + error.message);
+                        // 重置按钮状态
+                        delete7zBtn.disabled = false;
+                        delete7zBtn.textContent = '删除7-Zip';
+                        progressContainer7z.style.display = 'none';
+                        progressBar7z.style.width = '0%';
+                    }
+                }
+            });
+
+            // 选择解压后目录按钮事件（下载按钮旁边的新按钮）
+            selectDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    selectDirBtn.disabled = true;
+                    selectDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '50%';
+                    progressText.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        extractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', extractDirPath, 'extractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            selectDirBtn.style.display = 'none';
+                            runBtn.style.display = 'inline-block';
+                            reselectDirBtn.style.display = 'inline-block';
+                            deleteBtn.style.display = 'inline-block';
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            hintText.textContent = '目录已选择: ' + extractDirPath + '。点击"运行工具箱"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        selectDirBtn.disabled = false;
+                        selectDirBtn.textContent = '选择解压后目录';
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    selectDirBtn.disabled = false;
+                    selectDirBtn.textContent = '选择解压后目录';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            });
+
+            // Everything选择解压后目录按钮事件
+            selectEverythingDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    selectEverythingDirBtn.disabled = true;
+                    selectEverythingDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainerEverything.style.display = 'block';
+                    progressBarEverything.style.width = '50%';
+                    progressTextEverything.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    if (result.success) {
+                        everythingExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', everythingExtractDirPath, 'everythingExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            selectEverythingDirBtn.style.display = 'none';
+                            runEverythingBtn.style.display = 'inline-block';
+                            reselectEverythingDirBtn.style.display = 'inline-block';
+                            deleteEverythingBtn.style.display = 'inline-block';
+                            progressContainerEverything.style.display = 'none';
+                            progressBarEverything.style.width = '0%';
+                            hintTextEverything.textContent = '目录已选择: ' + everythingExtractDirPath + '。点击"运行Everything"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        selectEverythingDirBtn.disabled = false;
+                        selectEverythingDirBtn.textContent = '选择解压后目录';
+                        progressContainerEverything.style.display = 'none';
+                        progressBarEverything.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    selectEverythingDirBtn.disabled = false;
+                    selectEverythingDirBtn.textContent = '选择解压后目录';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                }
+            });
+
+            // 7-Zip选择安装目录按钮事件
+            select7zDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    select7zDirBtn.disabled = true;
+                    select7zDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer7z.style.display = 'block';
+                    progressBar7z.style.width = '50%';
+                    progressText7z.textContent = '正在准备选择安装目录...';
+                    
+                    // 选择安装目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        sevenZipInstallDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', sevenZipInstallDirPath, 'sevenZipInstallDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            select7zDirBtn.style.display = 'none';
+                            run7zBtn.style.display = 'inline-block';
+                            reselect7zDirBtn.style.display = 'inline-block';
+                            delete7zBtn.style.display = 'inline-block';
+                            progressContainer7z.style.display = 'none';
+                            progressBar7z.style.width = '0%';
+                            hintText7z.textContent = '目录已选择: ' + sevenZipInstallDirPath + '。点击"运行7-Zip"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        select7zDirBtn.disabled = false;
+                        select7zDirBtn.textContent = '选择安装目录';
+                        progressContainer7z.style.display = 'none';
+                        progressBar7z.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    select7zDirBtn.disabled = false;
+                    select7zDirBtn.textContent = '选择安装目录';
+                    progressContainer7z.style.display = 'none';
+                    progressBar7z.style.width = '0%';
+                }
+            });
+
+            // 选择解压后目录按钮事件（下载后出现的按钮）
+            extractBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    extractBtn.disabled = true;
+                    extractBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '50%';
+                    progressText.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        extractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', extractDirPath, 'extractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            extractBtn.style.display = 'none';
+                            runBtn.style.display = 'inline-block';
+                            reselectDirBtn.style.display = 'inline-block';
+                            deleteBtn.style.display = 'inline-block';
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            hintText.textContent = '目录已选择: ' + extractDirPath + '。点击"运行工具箱"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        extractBtn.disabled = false;
+                        extractBtn.textContent = '选择解压后目录';
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    extractBtn.disabled = false;
+                    extractBtn.textContent = '选择解压后目录';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            });
+
+            // Everything选择解压目录按钮事件
+            extractEverythingBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    extractEverythingBtn.disabled = true;
+                    extractEverythingBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainerEverything.style.display = 'block';
+                    progressBarEverything.style.width = '50%';
+                    progressTextEverything.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        everythingExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', everythingExtractDirPath, 'everythingExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            extractEverythingBtn.style.display = 'none';
+                            runEverythingBtn.style.display = 'inline-block';
+                            reselectEverythingDirBtn.style.display = 'inline-block';
+                            deleteEverythingBtn.style.display = 'inline-block';
+                            progressContainerEverything.style.display = 'none';
+                            progressBarEverything.style.width = '0%';
+                            hintTextEverything.textContent = '目录已选择: ' + everythingExtractDirPath + '。点击"运行Everything"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        extractEverythingBtn.disabled = false;
+                        extractEverythingBtn.textContent = '选择解压后目录';
+                        progressContainerEverything.style.display = 'none';
+                        progressBarEverything.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    extractEverythingBtn.disabled = false;
+                    extractEverythingBtn.textContent = '选择解压后目录';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                }
+            });
+
+            // 删除Node.js目录按钮事件
+            deleteNodeBtn.addEventListener('click', async () => {
+                try {
+                    const result = await ipcRenderer.invoke('delete-dir', 'node');
+                    if (result.success) {
+                        downloadNodeBtn.style.display = 'inline-block';
+                        selectNodeDirBtn.style.display = 'inline-block';
+                        extractNodeBtn.style.display = 'inline-block';
+                        reselectNodeDirBtn.style.display = 'none';
+                        deleteNodeBtn.style.display = 'none';
+                        hintTextNode.style.display = 'none';
+                        nodeExtractDirPath = '';
+                        console.log('[UI] Deleted nodeExtractDir');
+                    }
+                } catch (error) {
+                    console.error('[UI] Failed to delete directory:', error);
+                    alert('删除目录失败: ' + error.message);
+                }
+            });
+
+            // VS Code下载按钮事件
+            downloadVSCodeBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用下载按钮
+                    downloadVSCodeBtn.disabled = true;
+                    downloadVSCodeBtn.textContent = '处理中...';
+                    
+                    // 显示进度条
+                    progressContainerVSCode.style.display = 'block';
+                    progressBarVSCode.style.width = '50%';
+                    progressTextVSCode.textContent = '正在打开浏览器下载链接...';
+                    
+                    // 在浏览器中打开下载链接
+                    const result = await ipcRenderer.invoke('open-download-link', vscodeDownloadUrl);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            downloadVSCodeBtn.style.display = 'none';
+                            installVSCodeBtn.style.display = 'inline-block';
+                            progressContainerVSCode.style.display = 'none';
+                            progressBarVSCode.style.width = '0%';
+                            // 显示提示信息
+                            hintTextVSCode.style.display = 'block';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    downloadVSCodeBtn.disabled = false;
+                    downloadVSCodeBtn.textContent = '下载';
+                    progressContainerVSCode.style.display = 'none';
+                    progressBarVSCode.style.width = '0%';
+                }
+            });
+
+            // VS Code选择目录按钮事件
+            selectVSCodeDirBtn.addEventListener('click', async () => {
+                try {
+                    const result = await ipcRenderer.invoke('select-dir', 'vscode');
+                    if (result.success && result.path) {
+                        vscodeInstallDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', vscodeInstallDirPath, 'vscodeInstallDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                        downloadVSCodeBtn.style.display = 'none';
+                        selectVSCodeDirBtn.style.display = 'none';
+                        installVSCodeBtn.style.display = 'none';
+                        runVSCodeBtn.style.display = 'inline-block';
+                        reselectVSCodeDirBtn.style.display = 'inline-block';
+                        deleteVSCodeBtn.style.display = 'inline-block';
+                        hintTextVSCode.style.display = 'block';
+                        hintTextVSCode.textContent = '已选择目录: ' + vscodeInstallDirPath;
+                        console.log('[UI] Selected vscodeInstallDir:', vscodeInstallDirPath);
+                    }
+                } catch (error) {
+                    console.error('[UI] Failed to select directory:', error);
+                    alert('选择目录失败: ' + error.message);
+                }
+            });
+
+            // VS Code安装按钮事件
+            installVSCodeBtn.addEventListener('click', async () => {
+                try {
+                    const result = await ipcRenderer.invoke('install', 'vscode');
+                    if (result.success) {
+                        runVSCodeBtn.style.display = 'inline-block';
+                        installVSCodeBtn.style.display = 'none';
+                        hintTextVSCode.style.display = 'none';
+                    } else {
+                        alert('安装失败: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('[UI] Failed to install:', error);
+                    alert('安装失败: ' + error.message);
+                }
+            });
+
+            // VS Code运行按钮事件
+            runVSCodeBtn.addEventListener('click', async () => {
+                try {
+                    // 显示进度条
+                    progressContainerVSCode.style.display = 'block';
+                    progressBarVSCode.style.width = '50%';
+                    progressTextVSCode.textContent = '正在启动VS Code...';
+                    
+                    const result = await ipcRenderer.invoke('run-vscode', vscodeInstallDirPath);
+                    if (result.success) {
+                        // 隐藏进度条
+                        progressContainerVSCode.style.display = 'none';
+                        progressBarVSCode.style.width = '0%';
+                        // 更新提示文本显示启动成功
+                        hintTextVSCode.style.display = 'block';
+                        hintTextVSCode.innerHTML = 'VS Code启动成功<br>目录: ' + vscodeInstallDirPath;
+                    } else {
+                        // 隐藏进度条
+                        progressContainerVSCode.style.display = 'none';
+                        progressBarVSCode.style.width = '0%';
+                        // 更新提示文本显示启动失败
+                        hintTextVSCode.style.display = 'block';
+                        hintTextVSCode.innerHTML = '启动失败: ' + result.message + '<br>目录: ' + vscodeInstallDirPath;
+                    }
+                } catch (error) {
+                    // 隐藏进度条
+                    progressContainerVSCode.style.display = 'none';
+                    progressBarVSCode.style.width = '0%';
+                    console.error('[UI] Failed to run VS Code:', error);
+                    // 更新提示文本显示启动失败
+                    hintTextVSCode.style.display = 'block';
+                    hintTextVSCode.innerHTML = '启动失败: ' + error.message + '<br>目录: ' + vscodeInstallDirPath;
+                }
+            });
+
+            // VS Code重新选择目录按钮事件
+            reselectVSCodeDirBtn.addEventListener('click', async () => {
+                try {
+                    const result = await ipcRenderer.invoke('select-dir', 'vscode');
+                    if (result.success && result.path) {
+                        vscodeInstallDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', vscodeInstallDirPath, 'vscodeInstallDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 显示运行、重新选择和删除按钮，隐藏其他按钮
+                        downloadVSCodeBtn.style.display = 'none';
+                        selectVSCodeDirBtn.style.display = 'none';
+                        installVSCodeBtn.style.display = 'none';
+                        runVSCodeBtn.style.display = 'inline-block';
+                        reselectVSCodeDirBtn.style.display = 'inline-block';
+                        deleteVSCodeBtn.style.display = 'inline-block';
+                        hintTextVSCode.style.display = 'block';
+                        hintTextVSCode.textContent = '已选择目录: ' + vscodeInstallDirPath;
+                        console.log('[UI] Reselected vscodeInstallDir:', vscodeInstallDirPath);
+                    }
+                } catch (error) {
+                    console.error('[UI] Failed to reselect directory:', error);
+                    alert('重新选择目录失败: ' + error.message);
+                }
+            });
+
+            // VS Code删除目录按钮事件
+            deleteVSCodeBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除VS Code吗？这将删除整个目录: ' + vscodeInstallDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        deleteVSCodeBtn.disabled = true;
+                        deleteVSCodeBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainerVSCode.style.display = 'block';
+                        progressBarVSCode.style.width = '50%';
+                        progressTextVSCode.textContent = '正在删除VS Code...';
+                        
+                        const result = await ipcRenderer.invoke('delete-dir', 'vscode');
+                        if (result.success) {
+                            downloadVSCodeBtn.style.display = 'inline-block';
+                            selectVSCodeDirBtn.style.display = 'inline-block';
+                            installVSCodeBtn.style.display = 'inline-block';
+                            runVSCodeBtn.style.display = 'none';
+                            reselectVSCodeDirBtn.style.display = 'none';
+                            deleteVSCodeBtn.style.display = 'none';
+                            hintTextVSCode.style.display = 'none';
+                            vscodeInstallDirPath = '';
+                            console.log('[UI] Deleted vscodeInstallDir');
+                            
+                            // 隐藏进度条
+                            progressContainerVSCode.style.display = 'none';
+                            progressBarVSCode.style.width = '0%';
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('[UI] Failed to delete directory:', error);
+                        alert('删除目录失败: ' + error.message);
+                        // 重置按钮状态
+                        deleteVSCodeBtn.disabled = false;
+                        deleteVSCodeBtn.textContent = '删除VS Code';
+                        progressContainerVSCode.style.display = 'none';
+                        progressBarVSCode.style.width = '0%';
+                    }
+                }
+            });
+
+                    extractEverythingBtn.disabled = false;
+                    extractEverythingBtn.textContent = '选择解压后目录';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                
+            
+
+            // 7-Zip选择安装目录按钮事件（下载后出现的按钮）
+            install7zBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    install7zBtn.disabled = true;
+                    install7zBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer7z.style.display = 'block';
+                    progressBar7z.style.width = '50%';
+                    progressText7z.textContent = '正在准备选择安装目录...';
+                    
+                    // 选择安装目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        sevenZipInstallDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', sevenZipInstallDirPath, 'sevenZipInstallDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            install7zBtn.style.display = 'none';
+                            run7zBtn.style.display = 'inline-block';
+                            reselect7zDirBtn.style.display = 'inline-block';
+                            delete7zBtn.style.display = 'inline-block';
+                            progressContainer7z.style.display = 'none';
+                            progressBar7z.style.width = '0%';
+                            hintText7z.textContent = '目录已选择: ' + sevenZipInstallDirPath + '。点击"运行7-Zip"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        install7zBtn.disabled = false;
+                        install7zBtn.textContent = '选择安装目录';
+                        progressContainer7z.style.display = 'none';
+                        progressBar7z.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    install7zBtn.disabled = false;
+                    install7zBtn.textContent = '选择安装目录';
+                    progressContainer7z.style.display = 'none';
+                    progressBar7z.style.width = '0%';
+                }
+            });
+
+            // 重新选择目录按钮事件
+            reselectDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用重新选择按钮
+                    reselectDirBtn.disabled = true;
+                    reselectDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '50%';
+                    progressText.textContent = '正在准备重新选择目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        extractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', extractDirPath, 'extractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            reselectDirBtn.disabled = false;
+                            reselectDirBtn.textContent = '重新选择目录';
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            hintText.textContent = '目录已重新选择: ' + extractDirPath + '。点击"运行工具箱"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        reselectDirBtn.disabled = false;
+                        reselectDirBtn.textContent = '重新选择目录';
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    reselectDirBtn.disabled = false;
+                    reselectDirBtn.textContent = '重新选择目录';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            });
+
+            // Everything重新选择目录按钮事件
+            reselectEverythingDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用重新选择按钮
+                    reselectEverythingDirBtn.disabled = true;
+                    reselectEverythingDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainerEverything.style.display = 'block';
+                    progressBarEverything.style.width = '50%';
+                    progressTextEverything.textContent = '正在准备重新选择目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        everythingExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', everythingExtractDirPath, 'everythingExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            reselectEverythingDirBtn.disabled = false;
+                            reselectEverythingDirBtn.textContent = '重新选择目录';
+                            progressContainerEverything.style.display = 'none';
+                            progressBarEverything.style.width = '0%';
+                            hintTextEverything.textContent = '目录已重新选择: ' + everythingExtractDirPath + '。点击"运行Everything"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        reselectEverythingDirBtn.disabled = false;
+                        reselectEverythingDirBtn.textContent = '重新选择目录';
+                        progressContainerEverything.style.display = 'none';
+                        progressBarEverything.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    reselectEverythingDirBtn.disabled = false;
+                    reselectEverythingDirBtn.textContent = '重新选择目录';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                }
+            });
+
+            // 7-Zip重新选择目录按钮事件
+            reselect7zDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用重新选择按钮
+                    reselect7zDirBtn.disabled = true;
+                    reselect7zDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainer7z.style.display = 'block';
+                    progressBar7z.style.width = '50%';
+                    progressText7z.textContent = '正在准备重新选择目录...';
+                    
+                    // 选择安装目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        sevenZipInstallDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', sevenZipInstallDirPath, 'sevenZipInstallDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            reselect7zDirBtn.disabled = false;
+                            reselect7zDirBtn.textContent = '重新选择目录';
+                            progressContainer7z.style.display = 'none';
+                            progressBar7z.style.width = '0%';
+                            hintText7z.textContent = '目录已重新选择: ' + sevenZipInstallDirPath + '。点击"运行7-Zip"按钮启动应用。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        reselect7zDirBtn.disabled = false;
+                        reselect7zDirBtn.textContent = '重新选择目录';
+                        progressContainer7z.style.display = 'none';
+                        progressBar7z.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    reselect7zDirBtn.disabled = false;
+                    reselect7zDirBtn.textContent = '重新选择目录';
+                    progressContainer7z.style.display = 'none';
+                    progressBar7z.style.width = '0%';
+                }
+            });
+
+            // 运行工具箱按钮事件
+            runBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用运行按钮
+                    runBtn.disabled = true;
+                    runBtn.textContent = '运行中...';
+                    
+                    // 显示进度条
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '50%';
+                    progressText.textContent = '正在启动阮铭泽工具箱...';
+                    
+                    // 运行工具箱
+                    const result = await ipcRenderer.invoke('run-toolbox', extractDirPath);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            runBtn.textContent = '运行工具箱';
+                            runBtn.disabled = false;
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            hintText.textContent = '阮铭泽工具箱已启动！';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    runBtn.disabled = false;
+                    runBtn.textContent = '运行工具箱';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            });
+
+            // 运行Everything按钮事件
+            runEverythingBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用运行按钮
+                    runEverythingBtn.disabled = true;
+                    runEverythingBtn.textContent = '运行中...';
+                    
+                    // 显示进度条
+                    progressContainerEverything.style.display = 'block';
+                    progressBarEverything.style.width = '50%';
+                    progressTextEverything.textContent = '正在启动Everything...';
+                    
+                    // 运行Everything
+                    const result = await ipcRenderer.invoke('run-everything', everythingExtractDirPath);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            runEverythingBtn.textContent = '运行Everything';
+                            runEverythingBtn.disabled = false;
+                            progressContainerEverything.style.display = 'none';
+                            progressBarEverything.style.width = '0%';
+                            hintTextEverything.textContent = 'Everything已启动！';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    runEverythingBtn.disabled = false;
+                    runEverythingBtn.textContent = '运行Everything';
+                    progressContainerEverything.style.display = 'none';
+                    progressBarEverything.style.width = '0%';
+                }
+            });
+
+            // 运行7-Zip按钮事件
+            run7zBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用运行按钮
+                    run7zBtn.disabled = true;
+                    run7zBtn.textContent = '运行中...';
+                    
+                    // 显示进度条
+                    progressContainer7z.style.display = 'block';
+                    progressBar7z.style.width = '50%';
+                    progressText7z.textContent = '正在启动7-Zip...';
+                    
+                    // 运行7-Zip
+                    const result = await ipcRenderer.invoke('run-7z', sevenZipInstallDirPath);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            run7zBtn.textContent = '运行7-Zip';
+                            run7zBtn.disabled = false;
+                            progressContainer7z.style.display = 'none';
+                            progressBar7z.style.width = '0%';
+                            hintText7z.textContent = '7-Zip已启动！此操作是运行7-zip的文件管理器，如果想要解压文件，请右键压缩的文件，选择7-zip选择，里面就有解压按钮';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    run7zBtn.disabled = false;
+                    run7zBtn.textContent = '运行7-Zip';
+                    progressContainer7z.style.display = 'none';
+                    progressBar7z.style.width = '0%';
+                }
+            });
+
+            // Node.js下载按钮事件
+            downloadNodeBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用下载按钮
+                    downloadNodeBtn.disabled = true;
+                    downloadNodeBtn.textContent = '处理中...';
+                    
+                    // 显示进度条
+                    progressContainerNode.style.display = 'block';
+                    progressBarNode.style.width = '50%';
+                    progressTextNode.textContent = '正在打开浏览器下载链接...';
+                    
+                    // 在浏览器中打开下载链接
+                    const result = await ipcRenderer.invoke('open-download-link', nodeDownloadUrl);
+                    
+                    if (result.success) {
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            downloadNodeBtn.style.display = 'none';
+                            extractNodeBtn.style.display = 'inline-block';
+                            progressContainerNode.style.display = 'none';
+                            progressBarNode.style.width = '0%';
+                            // 始终显示PATH提示
+                            hintTextNode.style.display = 'block';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    downloadNodeBtn.disabled = false;
+                    downloadNodeBtn.textContent = '下载';
+                    progressContainerNode.style.display = 'none';
+                    progressBarNode.style.width = '0%';
+                }
+            });
+
+            // Node.js选择解压目录按钮事件
+            selectNodeDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    selectNodeDirBtn.disabled = true;
+                    selectNodeDirBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainerNode.style.display = 'block';
+                    progressBarNode.style.width = '50%';
+                    progressTextNode.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        nodeExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', nodeExtractDirPath, 'nodeExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            selectNodeDirBtn.style.display = 'none';
+                            reselectNodeDirBtn.style.display = 'inline-block';
+                            deleteNodeBtn.style.display = 'inline-block';
+                            progressContainerNode.style.display = 'none';
+                            progressBarNode.style.width = '0%';
+                            // 始终显示PATH提示
+                            hintTextNode.style.display = 'block';
+                            hintTextNode.innerHTML = '目录已选择: ' + nodeExtractDirPath + '<br><strong>重要提示：</strong>请将此目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        selectNodeDirBtn.disabled = false;
+                        selectNodeDirBtn.textContent = '选择解压后目录';
+                        progressContainerNode.style.display = 'none';
+                        progressBarNode.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    selectNodeDirBtn.disabled = false;
+                    selectNodeDirBtn.textContent = '选择解压后目录';
+                    progressContainerNode.style.display = 'none';
+                    progressBarNode.style.width = '0%';
+                }
+            });
+
+            // Node.js选择解压目录按钮事件（下载后出现的按钮）
+            extractNodeBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用选择按钮
+                    extractNodeBtn.disabled = true;
+                    extractNodeBtn.textContent = '选择中...';
+                    
+                    // 显示进度条
+                    progressContainerNode.style.display = 'block';
+                    progressBarNode.style.width = '50%';
+                    progressTextNode.textContent = '正在准备选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        nodeExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', nodeExtractDirPath, 'nodeExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            extractNodeBtn.style.display = 'none';
+                            reselectNodeDirBtn.style.display = 'inline-block';
+                            deleteNodeBtn.style.display = 'inline-block';
+                            progressContainerNode.style.display = 'none';
+                            progressBarNode.style.width = '0%';
+                            // 始终显示PATH提示
+                            hintTextNode.style.display = 'block';
+                            hintTextNode.innerHTML = '目录已选择: ' + nodeExtractDirPath + '<br><strong>重要提示：</strong>请将此目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        extractNodeBtn.disabled = false;
+                        extractNodeBtn.textContent = '选择解压后目录';
+                        progressContainerNode.style.display = 'none';
+                        progressBarNode.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    extractNodeBtn.disabled = false;
+                    extractNodeBtn.textContent = '选择解压后目录';
+                    progressContainerNode.style.display = 'none';
+                    progressBarNode.style.width = '0%';
+                }
+            });
+
+            // 重新选择Node.js目录按钮事件
+            reselectNodeDirBtn.addEventListener('click', async () => {
+                try {
+                    // 禁用重新选择按钮
+                    reselectNodeDirBtn.disabled = true;
+                    reselectNodeDirBtn.textContent = '重新选择中...';
+                    
+                    // 显示进度条
+                    progressContainerNode.style.display = 'block';
+                    progressBarNode.style.width = '50%';
+                    progressTextNode.textContent = '正在准备重新选择解压后目录...';
+                    
+                    // 选择解压后目录
+                    const result = await ipcRenderer.invoke('select-extract-dir');
+                    
+                    if (result.success) {
+                        nodeExtractDirPath = result.path;
+                        // 保存到本地数据
+                        const saveResult = await ipcRenderer.invoke('save-extract-dir', nodeExtractDirPath, 'nodeExtractDir');
+                        if (!saveResult) {
+                            throw new Error('无法保存本地数据');
+                        }
+                        // 更新按钮状态
+                        setTimeout(() => {
+                            progressContainerNode.style.display = 'none';
+                            progressBarNode.style.width = '0%';
+                            // 始终显示PATH提示
+                            hintTextNode.style.display = 'block';
+                            hintTextNode.innerHTML = '目录已重新选择: ' + nodeExtractDirPath + '<br><strong>重要提示：</strong>请将此目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。';
+                            reselectNodeDirBtn.disabled = false;
+                            reselectNodeDirBtn.textContent = '重新选择目录';
+                        }, 1000);
+                    } else {
+                        // 用户取消选择
+                        reselectNodeDirBtn.disabled = false;
+                        reselectNodeDirBtn.textContent = '重新选择目录';
+                        progressContainerNode.style.display = 'none';
+                        progressBarNode.style.width = '0%';
+                    }
+                } catch (error) {
+                    console.error('操作失败:', error);
+                    alert('操作失败: ' + error.message);
+                    // 重置按钮状态
+                    reselectNodeDirBtn.disabled = false;
+                    reselectNodeDirBtn.textContent = '重新选择目录';
+                    progressContainerNode.style.display = 'none';
+                    progressBarNode.style.width = '0%';
+                }
+            });
+
+            // 删除Node.js按钮事件
+            deleteNodeBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除Node.js吗？这将删除整个目录: ' + nodeExtractDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        deleteNodeBtn.disabled = true;
+                        deleteNodeBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainerNode.style.display = 'block';
+                        progressBarNode.style.width = '50%';
+                        progressTextNode.textContent = '正在删除Node.js...';
+                        
+                        // 删除Node.js
+                        const result = await ipcRenderer.invoke('delete-node', nodeExtractDirPath);
+                        
+                        if (result.success) {
+                            // 更新按钮状态
+                            setTimeout(() => {
+                                reselectNodeDirBtn.style.display = 'none';
+                                deleteNodeBtn.style.display = 'none';
+                                downloadNodeBtn.style.display = 'inline-block';
+                                selectNodeDirBtn.style.display = 'inline-block';
+                                progressContainerNode.style.display = 'none';
+                                progressBarNode.style.width = '0%';
+                                // 始终显示PATH提示
+                                hintTextNode.style.display = 'block';
+                                hintTextNode.innerHTML = '<strong>重要提示：</strong>安装完成后，请将Node.js目录添加到系统PATH环境变量中，这样就可以在命令行中使用npm、npx、node等命令了。';
+                                nodeExtractDirPath = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        alert('操作失败: ' + error.message);
+                        // 重置按钮状态
+                        deleteNodeBtn.disabled = false;
+                        deleteNodeBtn.textContent = '删除Node.js';
+                        progressContainerNode.style.display = 'none';
+                        progressBarNode.style.width = '0%';
+                    }
+                }
+            });
+
+            // 删除工具箱按钮事件
+            deleteBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除工具箱吗？这将删除整个目录: ' + extractDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        deleteBtn.disabled = true;
+                        deleteBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainer.style.display = 'block';
+                        progressBar.style.width = '50%';
+                        progressText.textContent = '正在删除工具箱...';
+                        
+                        // 删除工具箱
+                        const result = await ipcRenderer.invoke('delete-toolbox', extractDirPath);
+                        
+                        if (result.success) {
+                            // 更新按钮状态
+                            setTimeout(() => {
+                                runBtn.style.display = 'none';
+                                reselectDirBtn.style.display = 'none';
+                                deleteBtn.style.display = 'none';
+                                downloadBtn.style.display = 'inline-block';
+                                selectDirBtn.style.display = 'inline-block';
+                                progressContainer.style.display = 'none';
+                                progressBar.style.width = '0%';
+                                hintText.textContent = '工具箱已删除。您可以重新下载或选择其他目录。';
+                                extractDirPath = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        alert('操作失败: ' + error.message);
+                        // 重置按钮状态
+                        deleteBtn.disabled = false;
+                        deleteBtn.textContent = '删除工具箱';
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                    }
+                }
+            });
+
+            // 删除Everything按钮事件
+            deleteEverythingBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除Everything吗？这将删除整个目录: ' + everythingExtractDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        deleteEverythingBtn.disabled = true;
+                        deleteEverythingBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainerEverything.style.display = 'block';
+                        progressBarEverything.style.width = '50%';
+                        progressTextEverything.textContent = '正在删除Everything...';
+                        
+                        // 删除Everything
+                        const result = await ipcRenderer.invoke('delete-everything', everythingExtractDirPath);
+                        
+                        if (result.success) {
+                            // 更新按钮状态
+                            setTimeout(() => {
+                                runEverythingBtn.style.display = 'none';
+                                reselectEverythingDirBtn.style.display = 'none';
+                                deleteEverythingBtn.style.display = 'none';
+                                downloadEverythingBtn.style.display = 'inline-block';
+                                selectEverythingDirBtn.style.display = 'inline-block';
+                                progressContainerEverything.style.display = 'none';
+                                progressBarEverything.style.width = '0%';
+                                hintTextEverything.textContent = 'Everything已删除。您可以重新下载或选择其他目录。';
+                                everythingExtractDirPath = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        alert('操作失败: ' + error.message);
+                        // 重置按钮状态
+                        deleteEverythingBtn.disabled = false;
+                        deleteEverythingBtn.textContent = '删除Everything';
+                        progressContainerEverything.style.display = 'none';
+                        progressBarEverything.style.width = '0%';
+                    }
+                }
+            });
+
+            // 删除7-Zip按钮事件
+            delete7zBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomConfirm('确定要删除7-Zip吗？这将删除整个目录: ' + sevenZipInstallDirPath);
+                if (confirmed) {
+                    try {
+                        // 禁用删除按钮
+                        delete7zBtn.disabled = true;
+                        delete7zBtn.textContent = '删除中...';
+                        
+                        // 显示进度条
+                        progressContainer7z.style.display = 'block';
+                        progressBar7z.style.width = '50%';
+                        progressText7z.textContent = '正在删除7-Zip...';
+                        
+                        // 删除7-Zip
+                        const result = await ipcRenderer.invoke('delete-7z', sevenZipInstallDirPath);
+                        
+                        if (result.success) {
+                            // 更新按钮状态
+                            setTimeout(() => {
+                                run7zBtn.style.display = 'none';
+                                reselect7zDirBtn.style.display = 'none';
+                                delete7zBtn.style.display = 'none';
+                                download7zBtn.style.display = 'inline-block';
+                                select7zDirBtn.style.display = 'inline-block';
+                                progressContainer7z.style.display = 'none';
+                                progressBar7z.style.width = '0%';
+                                hintText7z.textContent = '7-Zip已删除。您可以重新下载或选择其他目录。';
+                                sevenZipInstallDirPath = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        alert('操作失败: ' + error.message);
+                        // 重置按钮状态
+                        delete7zBtn.disabled = false;
+                        delete7zBtn.textContent = '删除7-Zip';
+                        progressContainer7z.style.display = 'none';
+                        progressBar7z.style.width = '0%';
+                    }
+                }
+            });
+        }
+
+    
+
+        // 自定义确认框函数
+        function showCustomConfirm(message) {
+            return new Promise((resolve) => {
+                const confirmBox = document.getElementById('customConfirm');
+                const confirmMessage = document.getElementById('confirmMessage');
+                const confirmYes = document.getElementById('confirmYes');
+                const confirmNo = document.getElementById('confirmNo');
+                
+                confirmMessage.textContent = message;
+                confirmBox.style.display = 'flex';
+                
+                // 确定按钮事件
+                confirmYes.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(true);
+                };
+                
+                // 取消按钮事件
+                confirmNo.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(false);
+                };
+                
+                // 点击背景关闭确认框
+                confirmBox.onclick = (e) => {
+                    if (e.target === confirmBox) {
+                        confirmBox.style.display = 'none';
+                        resolve(false);
+                    }
+                };
+            });
+        }
+</script>
+</body>
+</html>

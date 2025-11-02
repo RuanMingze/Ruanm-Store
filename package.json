@@ -1,0 +1,49 @@
+{
+  "name": "ruanm-app-store",
+  "version": "1.0.0",
+  "description": "Ruanm应用商店",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win"
+  },
+  "keywords": [
+    "electron",
+    "app-store",
+    "ruanm"
+  ],
+  "author": "Ruanm",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^21.0.0",
+    "electron-builder": "^23.0.0"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.ruanm.appstore",
+    "productName": "Ruanm应用商店",
+    "icon": "icon-256.png",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "${productName}-${version}.${ext}",
+      "icon": "icon-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "compression": "store"
+  }
+}

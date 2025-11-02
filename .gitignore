@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# IDE files
+.vscode/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Icon?
+[Tt]humbs.db
+
+# Logs
+*.log
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output files
+*.exe
+*.msi
+*.dmg
+*.AppImage
